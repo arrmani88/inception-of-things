@@ -29,8 +29,8 @@ echo "----------- INSTALLING K3D... -----------"
 wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
 #disable swap # no need to disable it since we added 1 CPU
-# sudo swapoff -a
-# sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 #filling KUBECONFING to avoid this error: Kubectl the connection to the server localhost:8080 was refused
 echo "export KUBECONFIG=\"/etc/kubernetes/admin.conf\"" >> ~/.bashrc
@@ -40,20 +40,46 @@ source ~/.bashrc
 sudo rm /etc/containerd/config.toml
 sudo systemctl restart containerd
 
-#init kubeadm to generate /etc/kubernetes/admin.conf
+# echo "#init kubeadm to generate /etc/kubernetes/admin.conf"
 sudo kubeadm init
 
-#create cluster
-sudo k3d cluster create --config ../config/iot-cluster.yaml
+# dont need this if set the variable KUBECONFIG
+# mkdir -p $HOME/.kube
+# sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+# sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-#create and configure namespace
+# echo "#create cluster"
+# sudo k3d cluster create --config ../config/cluster.yaml
+sudo k3d cluster create iot-cluster --api-port 6445 -p 80:80@loadbalancer
+
+# echo "#create namespaces"
 sudo kubectl create namespace argocd
-sudo kubectl apply -f ../config/install-argocd.yaml -n argocd
+sudo kubectl create namespace dev
 
-#apply the ingress config in argocd namespace
+# echo "#argocd "
+sudo kubectl apply -f ../config/install.yaml -n argocd
+
+# expose the argocd-server service as a LoadBalancer type to access the ArgoCD UI from outside of the cluster.
+# sudo kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+# echo "#apply the ingress config in argocd namespace"
 sudo kubectl apply -f ../config/ingress.yaml -n argocd
 
-#create namespaces
-sudo kubectl apply -f ../config/argocd-namespace.yaml
-sudo kubectl apply -f ../config/dev-namespace.yaml
+# Wait for the Argo CD pod to be in a Running state
+while [[ $(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
+  sleep 1
+done
+
+# Argo UI by default will run on port 80. To access it on port 8090 or any other alternative port on the local machine,
+sudo kubectl port-forward -n argocd svc/argocd-server 8080:443
+
+
+# patch the argocd-secret secret in the argocd namespace. Specifically, it is updating
+# the contents of the argocd-secret secret by setting two key-value pairs in the stringData field
+kubectl -n argocd patch secret argocd-secret \
+  -p '{"stringData":  {
+    "admin.password": "$2a$12$Q7carOnqUto8BEcGpeu1EuWMZT9jrNBdLr2nXxPsbP2Ds65eVFIZ6",
+    "admin.passwordMtime": "'$(date +%FT%T%Z)'"
+  }}'
+# string 'password' crypted = $2a$12$Q7carOnqUto8BEcGpeu1EuWMZT9jrNBdLr2nXxPsbP2Ds65eVFIZ6
 

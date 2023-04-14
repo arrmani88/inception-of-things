@@ -2,20 +2,12 @@ apiVersion: k3d.io/v1alpha4 # specify the version of the k3d API to use
 kind: Simple # specify that this is a cluster resource
 metadata:
   name: iot-cluster # specify a name for the cluster
-
-
-  
-network:
-  name: my-cluster-network # specify a custom name for the network
-nodes:
-  - role: server # specify that this node will act as the cluster's control plane
-    k3sServerArgs:
-      - --namespace=argo-cd # create a namespace named "argo-cd"
-      - --namespace=dev # create a namespace named "dev"
-    image: rancher/k3s:v1.20.0-k3s1 # use the k3s image version 1.20.0-k3s1
-  - role: agent # specify that this node will act as a worker node
-    k3sServerArgs:
-      - --server=https://my-cluster-server:6443 # specify the URL of the server node
-      - --token=sometoken # specify the token for joining the cluster
-    image: rancher/k3s:v1.20.0-k3s1 # use the same image version as the server node
+# servers: 1 # control plane node
+# agents: 2 # worker nodes
+# kubeAPI: # same as `--api-port myhost.my.domain:6445` (where the name would resolve to 127.0.0.1)
+#   hostPort: "6445" # where the Kubernetes API listening port will be mapped to on your host system
+# ports:
+  # - port: 8080:80 # same as `--port '8080:80@loadbalancer'`
+    # nodeFilters:
+    #   - loadbalancer
 
