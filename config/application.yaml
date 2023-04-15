@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-app
+  namespace: argocd
+spec:
+  project: default # the Argo CD Application resource will be created in the default namespace, since the concept of a "project" is typically referred to as a "namespace"
+  source:
+    repoURL: https://github.com/arrmani88/anel-bou.git
+    targetRevision: HEAD
+    path: dev # where your application's Kubernetes manifests can be found inside git repo
+  destination: 
+    server: https://kubernetes.default.svc # the URL of the Kubernetes cluster where the application should be deployed
+    namespace: dev
+  syncPolicy:
+    automated: # the application should be automatically synced with the Git repo
+      selfHeal: true # i.e. automatically correcting any discrepancies between the desired and actual state of the app
+      prune: true # i.e. deleting any Kubernetes resources that are no longer needed (i.e pods)
+

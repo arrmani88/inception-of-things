@@ -73,7 +73,6 @@ done
 # Argo UI by default will run on port 80. To access it on port 8090 or any other alternative port on the local machine,
 sudo kubectl port-forward -n argocd svc/argocd-server 8080:443
 
-
 # patch the argocd-secret secret in the argocd namespace. Specifically, it is updating
 # the contents of the argocd-secret secret by setting two key-value pairs in the stringData field
 kubectl -n argocd patch secret argocd-secret \
@@ -83,3 +82,5 @@ kubectl -n argocd patch secret argocd-secret \
   }}'
 # string 'password' crypted = $2a$12$Q7carOnqUto8BEcGpeu1EuWMZT9jrNBdLr2nXxPsbP2Ds65eVFIZ6
 
+# install the app
+sudo kubectl apply -f ../config/application.yaml
