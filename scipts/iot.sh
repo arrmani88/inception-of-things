@@ -49,7 +49,6 @@ sudo kubeadm init
 # sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # echo "#create cluster"
-# sudo k3d cluster create --config ../config/cluster.yaml
 sudo k3d cluster create iot-cluster --api-port 6445 -p 80:80@loadbalancer
 
 # echo "#create namespaces"
@@ -82,5 +81,8 @@ kubectl -n argocd patch secret argocd-secret \
   }}'
 # string 'password' crypted = $2a$12$Q7carOnqUto8BEcGpeu1EuWMZT9jrNBdLr2nXxPsbP2Ds65eVFIZ6
 
-# install the app
+# apply the app config
 sudo kubectl apply -f ../config/application.yaml
+
+# apply the project config to all applications that inside this projec
+sudo kubectl apply -f ../config/project.yaml -n argocd

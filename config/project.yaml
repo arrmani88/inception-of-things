@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: argocd-project # name of the AppProject
+  labels: # labels are used to organize and identify the resource.
+    app: argocd
+spec:
+  description: argo-cd project where we deploy an app # Project description
+  sourceRepos:  # Allow manifests to deploy only from Sokube git repositories
+  - "https://github.com/arrmani88/*"
+  destinations:  # a list of clusters to which the application can be deployed.
+  - namespace: dev
+    server: https://kubernetes.default.svc
+  orphanedResources:
+    warn: false # don't warn about orphaned resources in the namespace
+
+
+#  orphanedResources are objects that were created by a Kubernetes application,
+#  but are no longer being managed by that application. This can happen if an
+#  application is deleted, but some of its associated resources are left behind.
